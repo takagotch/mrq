@@ -80,21 +80,30 @@ class QueueRegular(Queue):
          
        count = 0
        
-       sort_order = []
+       sort_order = [{"datequeued", -1 if self.is_reverse else 1}, ("_id", -1 if self.is_reverse else 1)]
        
        for i in range(max_jobs):
          query = self.base_dequeue_query
          
          job_data = self.collectin.find_one_and_update(
            query,
-           {"": {
-           
-           }, "": {
-           
+           {"$set": {
+             "status": "started",
+             "datestarted": datetime.datetime.utcnow(),
+             "worker": worker.id if worker else None
+           }, "$unset": {
+             "dateexpires": 1,
            }},
            sort=sort_order,
            return_documetn=ReturnDocument.AFTER,
            projection={
+             "_id": 1,
+             "path": 1,
+             "params": 1,
+             "status": 1,
+             "retry_count": 1,
+             "queue": 1,
+             "datequeued": 1
            }
          )
          
